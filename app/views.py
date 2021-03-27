@@ -5,8 +5,11 @@ Werkzeug Documentation:  http://werkzeug.pocoo.org/documentation/
 This file creates your application.
 """
 
-from app import app
+from app import app, mail
 from flask import render_template, request, redirect, url_for, flash
+from .forms import ContactForm
+from flask_mail import Message
+
 
 
 ###
@@ -25,6 +28,21 @@ def about():
     return render_template('about.html', name="Mary Jane")
 
 
+@app.route('/contact', methods=['POST', 'GET'])
+def contact():
+    contact = ContactForm()
+    if request.method == 'POST':
+        if contact.validate_on_submit():
+            send = (request.form['name'], request.form['email'])
+            msg = Message(subject=request.form['subject'], sender=send)
+            msg.add_recipient(('Developer', 'dev@example.com'))
+            msg.body= request.form['message']
+            mail.send(msg)
+            flash('Your email was succesfully sent to {}'.format('Developer'), 'success')
+            return redirect(url_for('home'))
+        flash_errors(contact_form)
+    return render_template('contact.html', form=contact)
+
 ###
 # The functions below should be applicable to all Flask apps.
 ###
@@ -34,6 +52,14 @@ def send_text_file(file_name):
     """Send your static text file."""
     file_dot_text = file_name + '.txt'
     return app.send_static_file(file_dot_text)
+
+def flash_errors(form):
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(u"Error in the %s field - %s" % (
+                getattr(form, field).label.text,
+                error
+            ), 'danger')
 
 
 @app.after_request

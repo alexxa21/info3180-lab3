@@ -11,3 +11,9 @@ venv/
 
 # PyCharm
 .idea
+
+# VS Code
+.vscode/
+
+#Additional Files
+info.txt
